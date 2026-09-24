@@ -1,0 +1,16 @@
+[
+  {
+    "repo": "abgutman/av-tools",
+    "workflow": "ccp-typewatch.yml",
+    "interval_minutes": 30,
+    "active_hours_et": [7, 21],
+    "note": "Equity non-real-estate (non-City) case-type watch"
+  },
+  {
+    "repo": "abgutman/av-tools",
+    "workflow": "ccp-namewatch.yml",
+    "interval_minutes": 60,
+    "active_hours_et": [7, 20],
+    "note": "Party watch (Sheriff, DraftKings, FanDuel, Drexel, Academy of Natural Sciences...). Hourly is deliberate — FJD name index posts in daytime batches."
+  }
+]

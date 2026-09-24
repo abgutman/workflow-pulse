@@ -1,0 +1,45 @@
+name: Pulse dispatcher
+
+# Self-chaining dispatcher: each job loops ~5h45m dispatching targets.json on
+# true intervals, then exits; the concurrency group holds one queued successor
+# that starts the moment the running job ends. GitHub's schedule throttling
+# (~4-8 delivered/day per repo) only needs to land ONE cron every ~6h to keep
+# the chain stocked — the cadence itself comes from the loop, not from cron.
+on:
+  workflow_dispatch:            # manual chain (re)start
+  schedule:
+    - cron: '23 * * * *'        # hourly; most get dropped, the chain absorbs it
+
+concurrency:
+  group: pulse
+  cancel-in-progress: false     # new fires queue behind the running loop
+
+permissions:
+  contents: write               # heartbeat commit only
+
+jobs:
+  pulse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 358        # safety net above the loop's 5h45m clean exit
+    steps:
+      - uses: actions/checkout@v4
+
+      # GitHub auto-disables schedules in repos with 60 days of no commits;
+      # one heartbeat commit per UTC day keeps this repo permanently alive.
+      - name: Daily heartbeat commit
+        run: |
+          date -u +%F > heartbeat.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add heartbeat.txt
+          if git diff --cached --quiet; then
+            echo "Heartbeat already current"
+          else
+            git commit -m "heartbeat $(date -u +%F)"
+            git pull --rebase --autostash && git push
+          fi
+
+      - name: Dispatch loop (~5h45m)
+        env:
+          PULSE_PAT: ${{ secrets.PULSE_PAT }}
+        run: python3 pulse.py
