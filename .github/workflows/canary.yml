@@ -4,15 +4,19 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: Attempt one dispatch with verbose error
+      - name: Diagnose token grants
         env:
           PULSE_PAT: ${{ secrets.PULSE_PAT }}
         run: |
-          echo "token length: ${#PULSE_PAT}"
-          code=$(curl -s -o /tmp/resp -w "%{http_code}" -X POST \
-            -H "Authorization: Bearer $PULSE_PAT" \
+          echo "== who am I:"
+          curl -s -H "Authorization: Bearer $PULSE_PAT" https://api.github.com/user | grep '"login"' || true
+          echo "== can the token see av-tools? (200=granted, 404=repo not in token's list / wrong resource owner):"
+          curl -s -o /tmp/repo -w "HTTP %{http_code}\n" -H "Authorization: Bearer $PULSE_PAT" https://api.github.com/repos/abgutman/av-tools
+          echo "== can it list workflows? (200=Actions read ok):"
+          curl -s -o /tmp/wf -w "HTTP %{http_code}\n" -H "Authorization: Bearer $PULSE_PAT" https://api.github.com/repos/abgutman/av-tools/actions/workflows
+          echo "== can it dispatch? (204=Actions write ok):"
+          curl -s -o /tmp/resp -w "HTTP %{http_code}\n" -X POST -H "Authorization: Bearer $PULSE_PAT" \
             -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/abgutman/av-tools/actions/workflows/ccp-typewatch.yml/dispatches \
-            -d '{"ref":"main"}')
-          echo "HTTP $code"
-          cat /tmp/resp
+            -d '{"ref":"main"}'
+          cat /tmp/resp || true
