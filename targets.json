@@ -12,5 +12,12 @@
     "interval_minutes": 60,
     "active_hours_et": [7, 20],
     "note": "Party watch (Sheriff, DraftKings, FanDuel, Drexel, Academy of Natural Sciences...). Hourly is deliberate — FJD name index posts in daytime batches."
+  },
+  {
+    "repo": "abgutman/inky-court-digest",
+    "workflow": "fetch.yml",
+    "interval_minutes": 180,
+    "active_hours_et": [3, 6],
+    "note": "Digest Stage 1 fetch. Must land BEFORE the 6:15 ET cloud judgment; GitHub delayed its schedule crons 4-8h past it on 9/28-9/29 (stub digests). fetch.yml's ran-today guard makes extra dispatches no-ops, so one clock-true dispatch in [3,6) ET guarantees data."
   }
 ]

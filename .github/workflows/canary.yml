@@ -20,3 +20,15 @@ jobs:
             https://api.github.com/repos/abgutman/av-tools/actions/workflows/ccp-typewatch.yml/dispatches \
             -d '{"ref":"main"}'
           cat /tmp/resp || true
+      - name: Diagnose token grants — inky-court-digest
+        env:
+          PULSE_PAT: ${{ secrets.PULSE_PAT }}
+        run: |
+          echo "== can the token see inky-court-digest? (200=granted, 404=not in token's repo list):"
+          curl -s -o /tmp/repo2 -w "HTTP %{http_code}\n" -H "Authorization: Bearer $PULSE_PAT" https://api.github.com/repos/abgutman/inky-court-digest
+          echo "== can it dispatch fetch.yml? (204=Actions write ok; a triggered run is harmless — ran-today guard skips):"
+          curl -s -o /tmp/resp2 -w "HTTP %{http_code}\n" -X POST -H "Authorization: Bearer $PULSE_PAT" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/abgutman/inky-court-digest/actions/workflows/fetch.yml/dispatches \
+            -d '{"ref":"main"}'
+          cat /tmp/resp2 || true
